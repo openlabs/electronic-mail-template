@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<tryton>
+  <data>
+
+    <record model="ir.ui.view" id="mail_view_form">
+      <field name="model">electronic_mail</field>
+      <field name="type">form</field>
+      <field name="inherit" ref="electronic_mail.mail_view_form"/>
+      <field name="arch" type="xml">
+        <![CDATA[
+          <data>
+            <xpath expr="/form/field[@name='email']" position="replace">
+              <notebook colspan="4">
+                <page id="plain" string="Plain Text">
+                  <field name="body_plain" colspan="4"/>
+                </page>
+                <page id="html" string="HTML">
+                  <field name="body_html" colspan="4"/>
+                </page>
+                <page id="file" string="Email File">
+                  <field name="email"/>
+                  <separator name="headers" colspan="4"/>
+                  <field name="headers" colspan="4"/>
+                </page>
+              </notebook>
+            </xpath>
+          </data>
+        ]]>
+      </field>
+    </record>
+
+    <record model="ir.ui.view" id="template_view_tree">
+      <field name="model">electronic_mail.template</field>
+      <field name="type">tree</field>
+      <field name="arch" type="xml">
+      <![CDATA[
+      <tree string="Email Templates">
+        <field name="model" select="2"/>
+        <field name="langauge" select="2"/>
+        <field name="engine" select="2"/>
+        <field name="subject" select="1"/>
+      </tree>
+	    ]]>
+      </field>
+    </record>
+
+    <record model="ir.ui.view" id="template_view_form">
+      <field name="model">electronic_mail.template</field>
+      <field name="type">form</field>
+      <field name="arch" type="xml">
+      <![CDATA[
+      <form string="Email">
+        <label name="model"/>
+        <field name="model"/>
+        <label name="language"/>
+        <field name="language"/>
+        <notebook colspan="4">
+          <page string="General" id="general">
+            <group colspan="2" col="2" id="addresses">
+              <label name="to"/>
+              <field name="to"/>
+              <label name="cc"/>
+              <field name="cc"/>
+              <label name="bcc"/>
+              <field name="bcc"/>
+            </group>
+            <group colspan="2" col="2" id="other_main_info">
+              <label name="from_"/>
+              <field name="from_"/>
+              <label name="mailbox"/>
+              <field name="mailbox"/>
+              <label name="subject"/>
+              <field name="subject"/>
+            </group>
+            <group colspan="2" id="body_text">
+              <separator name="plain" colspan="4"/>
+              <field name="plain" colspan="4" height="300"/>
+            </group>
+            <group colspan="2" id="body_html">
+              <separator name="html" colspan="4"/>
+              <field name="html" colspan="4" height="300"/>
+            </group>
+          </page>
+          <page string="Reports" id="reports">
+            <field name="reports" colspan="4"/>
+          </page>
+          <page string="Advanced" id="advanced">
+            <label name="engine"/>
+            <field name="engine"/>
+            <separator name="triggers" colspan="4"/>
+            <field name="triggers" colspan="4"/>
+            <separator name="headers" colspan="4"/>
+            <field name="headers" colspan="4"/>
+          </page>
+        </notebook>
+      </form>
+      ]]>
+      </field>
+    </record>
+    <record model="ir.action.act_window" id="act_template_form">
+      <field name="name">Templates</field>
+      <field name="res_model">electronic_mail.template</field>
+      <field name="view_type">form</field>
+    </record>
+    <record model="ir.action.act_window.view" id="act_template_form_view1">
+      <field name="sequence" eval="10"/>
+      <field name="view" ref="template_view_tree"/>
+      <field name="act_window" ref="act_template_form"/>
+    </record>
+    <record model="ir.action.act_window.view" id="act_template_form_view2">
+      <field name="sequence" eval="20"/>
+      <field name="view" ref="template_view_form"/>
+      <field name="act_window" ref="act_template_form"/>
+    </record>
+    <menuitem action="act_template_form" 
+      parent="electronic_mail.menu_email_management"
+      id="menu_email_template" sequence="90"/>
+
+  </data>
+</tryton>
