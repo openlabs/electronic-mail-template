@@ -4,12 +4,17 @@
 "Email Template"
 from __future__ import with_statement
 
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 import mimetypes
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email.utils import formatdate
 
+from genshi.template import TextTemplate
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.tools import safe_eval
 from trytond.transaction import Transaction
@@ -32,9 +37,9 @@ class Template(ModelSQL, ModelView):
         'ir.model', 'Model', required=True)
 
     # All the following fields are expression fields which are evaluated
-    # Safely, the other fields are firectly from electronic_mail itself
+    # safely, the other fields are directly used from electronic_mail itself
     language = fields.Char(
-        'Language Code', help='Expression to find the ISO langauge code')
+        'Language', help='Expression to find the ISO langauge code')
     plain = fields.Text('Plain Text Body')
     html = fields.Text('HTML Body')
     reports = fields.Many2Many(
@@ -52,31 +57,17 @@ class Template(ModelSQL, ModelView):
 
     def default_engine(self):
         '''Default Engine'''
-        return 'python'
+        return 'genshi'
 
     def get_engines(self):
         '''Returns the engines as list of tuple
 
-            A custom engine could be defined by creating a new method
-            in this class in the name _engine_<name>. It should accept
-            the expression and record respectively as positional arguments
-            and return the unicode of evaluated expression
-
-            The third argument is name_only, if True, then the visible name
-            of the engine has to be returned
-
         :return: List of tuples
         '''
-        engines = [ ]
-
-        for attribute in dir(self):
-            if attribute.startswith('_engine_'):
-                engines.append(
-                    (
-                        attribute.lstrip('_engine_'),
-                        getattr(self, attribute)(name_only=True)
-                        )
-                    )
+        engines = [ 
+            ('python', 'Python'),
+            ('genshi', 'Genshi'),
+        ]
         return engines
 
     def eval(self, template, expression, record):
@@ -89,17 +80,34 @@ class Template(ModelSQL, ModelView):
         engine_method = getattr(self, '_engine_' + template.engine)
         return engine_method(expression, record)
 
-    def _engine_python(self, expression=None, record=None, name_only=False):
+    def template_context(self, record):
+        """Generate the tempalte context
+
+        This is mainly to assist in the inheritance pattern
+        """
+        return {'record': record}
+
+    def _engine_python(self, expression, record):
         '''Evaluate the pythonic expression and return its value
         '''
-        if name_only:
-            return 'Python'
-
         if expression is None:
             return u''
 
         assert record is not None, 'Record is undefined'
-        return safe_eval(expression, {'self': record})
+        template_context = self.template_context(record)
+        return safe_eval(expression, template_context)
+
+    def _engine_genshi(self, expression, record):
+        '''
+        :param expression: Expression to evaluate
+        :param record: Browse record
+        '''
+        if not expression:
+            return u''
+
+        template = TextTemplate(expression)
+        template_context = self.template_context(record)
+        return template.generate(**template_context).render(encoding='UTF-8')
 
     def render(self, template, record):
         '''Renders the template and returns as email object
@@ -112,7 +120,7 @@ class Template(ModelSQL, ModelView):
         message = MIMEMultipart('alternative')
         message['date'] = formatdate()
 
-        language = Transaction().context['language']
+        language = Transaction().context.get('language', 'en_US')
         if template.language:
             language = self.eval(template, template.language, record)
 
@@ -206,7 +214,6 @@ class Template(ModelSQL, ModelView):
 
         for record in record_object.browse(record_ids):
             email_message = self.render(template, record)
-            print email_message.as_string()
             email_object.create_from_email(email_message, template.mailbox.id)
 
         return True
