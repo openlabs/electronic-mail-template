@@ -6,6 +6,7 @@
 from trytond.model import ModelSQL, ModelView, fields
 from trytond.transaction import Transaction
 
+
 class Trigger(ModelSQL, ModelView):
     "Extend triggers to use Email template"
     _name = 'ir.trigger'

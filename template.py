@@ -16,9 +16,38 @@ from email.utils import formatdate
 
 from genshi.template import TextTemplate
 from trytond.model import ModelView, ModelSQL, fields
-from trytond.tools import safe_eval
+from trytond.tools import safe_eval, get_smtp_server
 from trytond.transaction import Transaction
 from trytond.pyson import Eval
+
+
+def split_emails(email_ids):
+    """Email IDs could be separated by ';' or ','
+
+    >>> email_list = '1@x.com;2@y.com , 3@z.com '
+    >>> emails = split_emails(email_list)
+    >>> emails
+    ['1@x.com', '2@y.com', '3@z.com']
+
+    :param email_ids: email id
+    :type email_ids: str or unicode
+    """
+    if not email_ids:
+        return [ ]
+    email_ids = email_ids.replace(' ', '').replace(',', ';')
+    return email_ids.split(';')
+
+
+def recepients_from_fields(email_record):
+    """
+    Returns a list of email addresses who are the recipients of this email
+
+    :param email_record: Browse record of the email
+    """
+    recepients = [ ]
+    for field in ('to', 'cc', 'bcc'):
+        recepients.extend(split_emails(getattr(email_record, field)))
+    return recepients
 
 
 class Template(ModelSQL, ModelView):
@@ -52,8 +81,7 @@ class Template(ModelSQL, ModelView):
         context={
             'model': Eval('model'),
             'email_template': True,
-            }
-        )
+            })
 
     def default_engine(self):
         '''Default Engine'''
@@ -194,16 +222,12 @@ class Template(ModelSQL, ModelView):
         reports = [ ]
         for report_action in template.reports:
             report = self.pool.get(report_action.report_name, type='report')
-            reports.append(
-                report.execute(
-                    [record.id],
-                    {'id': record.id}
-                    )
-            )
+            reports.append(report.execute([record.id], {'id': record.id}))
+
         # The boolean for direct print in the tuple is useless for emails
         return [(r[0], r[1], r[3]) for r in reports]
 
-    def render_and_save(self, template_id, record_ids):
+    def render_and_send(self, template_id, record_ids):
         """
         Render the template identified by template_id for
         the records identified from record_ids
@@ -214,8 +238,9 @@ class Template(ModelSQL, ModelView):
 
         for record in record_object.browse(record_ids):
             email_message = self.render(template, record)
-            email_object.create_from_email(email_message, template.mailbox.id)
-
+            email_id = email_object.create_from_email(
+                email_message, template.mailbox.id)
+            self.send_email(email_id)
         return True
 
     def mail_from_trigger(self, record_ids, trigger_id):
@@ -230,8 +255,25 @@ class Template(ModelSQL, ModelView):
         """
         trigger_obj = self.pool.get('ir.trigger')
         trigger = trigger_obj.browse(trigger_id)
+        return self.render_and_send(trigger.email_template.id, record_ids)
 
-        return self.render_and_save(trigger.email_template.id, record_ids)
+    def send_email(self, email_id):
+        """
+        Send out the given email using the SMTP_CLIENT if configured in the
+        Tryton Server configuration
+
+        :param email_id: ID of the email to be sent
+        """
+        email_obj = self.pool.get('electronic_mail')
+
+        email_record = email_obj.browse(email_id)
+        recepients = recepients_from_fields(email_record)
+
+        server = get_smtp_server()
+        server.sendmail(email_record.from_, recepients,
+            email_obj._get_email(email_record))
+        server.quit()
+        return True
 
 Template()
 
