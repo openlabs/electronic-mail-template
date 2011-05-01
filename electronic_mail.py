@@ -34,5 +34,8 @@ class ElectronicMail(ModelSQL, ModelView):
                         result[name][email.id] = part.get_payload()
         return result
 
+    def check_xml_record(self, ids, values):
+        '''It should be possible to overwrite templates'''
+        return True
 
 ElectronicMail()
