@@ -26,10 +26,10 @@ class TemplateTestCase(unittest.TestCase):
 
     def test0010_genshi_test(self):
         "Test Genshi templating with a simple expression"
-        expression = u'<h1>Hello ${record["name"]}</h2>'
-        record = {'name': 'Cédric'}
+        expression = u'<h1>Hello ${record["name"]}</h1>'
+        record = {'name': u'Cédric'}
         result = self.template_obj._engine_genshi(expression, record)
-        self.assertEqual(result, u'<h1>Hello Cédric</h1>')
+        self.assertEqual(result, '<h1>Hello C\xc3\xa9dric</h1>')
 
 
 def suite():
