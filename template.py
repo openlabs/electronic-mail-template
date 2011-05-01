@@ -98,6 +98,10 @@ class Template(ModelSQL, ModelView):
         ]
         return engines
 
+    def check_xml_record(self, ids, values):
+        '''It should be possible to overwrite templates'''
+        return True
+
     def eval(self, template, expression, record):
         '''Evaluates the given :attr:expression
 
