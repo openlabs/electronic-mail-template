@@ -102,7 +102,6 @@ this repository contains the full copyright notices and license terms. -->
     <record model="ir.action.act_window" id="act_template_form">
       <field name="name">Templates</field>
       <field name="res_model">electronic_mail.template</field>
-      <field name="view_type">form</field>
     </record>
     <record model="ir.action.act_window.view" id="act_template_form_view1">
       <field name="sequence" eval="10"/>
