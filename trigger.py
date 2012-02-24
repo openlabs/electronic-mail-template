@@ -5,6 +5,7 @@
 
 from trytond.model import ModelSQL, ModelView, fields
 from trytond.transaction import Transaction
+from trytond.pool import Pool
 
 
 class Trigger(ModelSQL, ModelView):
@@ -24,7 +25,7 @@ class Trigger(ModelSQL, ModelView):
         """If invoked from the email_template fill 
         action model as email_template
         """
-        model_obj = self.pool.get('ir.model')
+        model_obj = Pool().get('ir.model')
 
         email_trigger = Transaction().context.get('email_template', False)
         if not email_trigger:

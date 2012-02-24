@@ -37,10 +37,10 @@ this repository contains the full copyright notices and license terms. -->
       <field name="arch" type="xml">
       <![CDATA[
       <tree string="Email Templates">
-        <field name="model" select="2"/>
-        <field name="langauge" select="2"/>
-        <field name="engine" select="2"/>
-        <field name="subject" select="1"/>
+        <field name="model"/>
+        <field name="langauge"/>
+        <field name="engine"/>
+        <field name="subject"/>
       </tree>
 	    ]]>
       </field>

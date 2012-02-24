@@ -19,6 +19,7 @@ from trytond.model import ModelView, ModelSQL, fields
 from trytond.tools import safe_eval, get_smtp_server
 from trytond.transaction import Transaction
 from trytond.pyson import Eval
+from trytond.pool import Pool
 
 
 def split_emails(email_ids):
@@ -63,19 +64,19 @@ class Template(ModelSQL, ModelView):
     electronic_mail = fields.Many2One(
         'electronic_mail', 'Email', required=True, ondelete='CASCADE')
     model = fields.Many2One(
-        'ir.model', 'Model', required=True)
+        'ir.model', 'Model', required=True, select="1")
 
     # All the following fields are expression fields which are evaluated
     # safely, the other fields are directly used from electronic_mail itself
     language = fields.Char(
-        'Language', help='Expression to find the ISO langauge code')
+        'Language', help='Expression to find the ISO langauge code', select="2")
     plain = fields.Text('Plain Text Body')
     html = fields.Text('HTML Body')
     reports = fields.Many2Many(
         'electronic_mail.template-ir.action.report',
         'template', 'report', 'Reports')
     engine = fields.Selection(
-        'get_engines', 'Engine', required=True)
+        'get_engines', 'Engine', required=True, select="2")
     triggers = fields.One2Many(
         'ir.trigger', 'email_template', 'Triggers',
         context={
@@ -225,7 +226,7 @@ class Template(ModelSQL, ModelView):
         '''
         reports = [ ]
         for report_action in template.reports:
-            report = self.pool.get(report_action.report_name, type='report')
+            report = Pool().get(report_action.report_name, type='report')
             reports.append(report.execute([record.id], {'id': record.id}))
 
         # The boolean for direct print in the tuple is useless for emails
@@ -237,8 +238,8 @@ class Template(ModelSQL, ModelView):
         the records identified from record_ids
         """
         template = self.browse(template_id)
-        record_object = self.pool.get(template.model.model)
-        email_object = self.pool.get('electronic_mail')
+        record_object = Pool().get(template.model.model)
+        email_object = Pool().get('electronic_mail')
 
         for record in record_object.browse(record_ids):
             email_message = self.render(template, record)
@@ -257,7 +258,7 @@ class Template(ModelSQL, ModelView):
         :param record_ids: IDs of the records
         :param trigger_id: ID of the trigger
         """
-        trigger_obj = self.pool.get('ir.trigger')
+        trigger_obj = Pool().get('ir.trigger')
         trigger = trigger_obj.browse(trigger_id)
         return self.render_and_send(trigger.email_template.id, record_ids)
 
@@ -268,7 +269,7 @@ class Template(ModelSQL, ModelView):
 
         :param email_id: ID of the email to be sent
         """
-        email_obj = self.pool.get('electronic_mail')
+        email_obj = Pool().get('electronic_mail')
 
         email_record = email_obj.browse(email_id)
         recepients = recepients_from_fields(email_record)
