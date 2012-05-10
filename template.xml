@@ -38,7 +38,7 @@ this repository contains the full copyright notices and license terms. -->
       <![CDATA[
       <tree string="Email Templates">
         <field name="model"/>
-        <field name="langauge"/>
+        <field name="language"/>
         <field name="engine"/>
         <field name="subject"/>
       </tree>

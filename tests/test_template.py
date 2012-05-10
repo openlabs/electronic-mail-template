@@ -12,8 +12,7 @@ if os.path.isdir(DIR):
 import unittest
 
 import trytond.tests.test_tryton
-from trytond.tests.test_tryton import POOL, DB_NAME, USER, CONTEXT, test_view
-from trytond.transaction import Transaction
+from trytond.tests.test_tryton import POOL, test_view, test_depends
 
 
 class TemplateTestCase(unittest.TestCase):
@@ -30,6 +29,12 @@ class TemplateTestCase(unittest.TestCase):
         record = {'name': u'Cédric'}
         result = self.template_obj._engine_genshi(expression, record)
         self.assertEqual(result, '<h1>Hello C\xc3\xa9dric</h1>')
+
+    def test0020view(self):
+        test_view('electronic_mail_template')
+
+    def test0030depends(self):
+        test_depends()
 
 
 def suite():
