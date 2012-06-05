@@ -5,7 +5,7 @@
 {
     'name': 'Electronic Mail Template',
     'description': '''Electronic mail template''',
-    'version': '2.2.0.1',
+    'version': '2.2.0.2',
     'author': 'Openlabs Technologies & Consulting (P) LTD',
     'email': 'info@openlabs.co.in',
     'website': 'http://openlabs.co.in',
